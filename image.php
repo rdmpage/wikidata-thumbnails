@@ -111,7 +111,8 @@ function fetch_image($qid, &$count, $force = false)
 			
 			//print_r($obj);
 			
-			// Add any relevant linked ids to the stack so we can resolve them
+			
+			$image_url == '';
 			foreach ($obj->entities->{$qid}->claims as $k => $v)
 			{
 				switch ($k)
@@ -125,94 +126,131 @@ function fetch_image($qid, &$count, $force = false)
 							$image_url = 'https://commons.wikimedia.org/w/thumb.php?f=' . urlencode($value) . '&w=200';
 						}
 						break;
-					
-					// internet archive
-					case 'P724':
-						$mainsnak = $v[0]->mainsnak;					
-						$value = $mainsnak->datavalue->value;
-
-						// We can't always rely on simple rules as some archives (e.g. PubMed Central)
-						// have their own rules for files
-					
-						if (preg_match('/pubmed-PMC/', $value))
+						
+					// biostor
+					case 'P5315':
+						if ($image_url == '')
 						{
-							$ia_url = 'https://archive.org/metadata/' . $value;
-				
+							$mainsnak = $v[0]->mainsnak;					
+							$value = $mainsnak->datavalue->value;
+
+							// could use simple rule but I don't have all of BioStor in IA yet
+							$ia_id = 'biostor-' . $value;
+							
+							$ia_url = 'https://archive.org/metadata/' . $ia_id;
+			
 							$ia_json = get($ia_url);
-				
+			
 							$ia_obj = json_decode($ia_json);
 							if ($ia_obj)
 							{
-								$pdf_name = '';
-								foreach ($ia_obj->files as $file)
+								if (isset($ia_obj->files ))
 								{
-									if ($file->format == 'Text PDF')
+									foreach ($ia_obj->files as $file)
 									{
-										// guess the thumbnail
-										$image_url = 'https://archive.org/download/' . $value . '/page/cover_thumb.jpg';
-									}						
+										if ($file->format == 'Text PDF')
+										{
+											// guess the thumbnail
+											$image_url = 'https://archive.org/download/' . $ia_id . '/page/cover_thumb.jpg';
+										}						
+									}
 								}
 							}
 						}
-						else
+						break;					
+					
+					// internet archive
+					case 'P724':
+						if ($image_url == '')
 						{
-							// Standard Internet Archive (guess)
-							$image_url = 'https://archive.org/download/' . $value . '/page/cover_thumb.jpg';
+							$mainsnak = $v[0]->mainsnak;					
+							$value = $mainsnak->datavalue->value;
+
+							// We can't always rely on simple rules as some archives (e.g. PubMed Central)
+							// have their own rules for files
+					
+							if (preg_match('/pubmed-PMC/', $value))
+							{
+								$ia_url = 'https://archive.org/metadata/' . $value;
+				
+								$ia_json = get($ia_url);
+				
+								$ia_obj = json_decode($ia_json);
+								if ($ia_obj)
+								{
+									foreach ($ia_obj->files as $file)
+									{
+										if ($file->format == 'Text PDF')
+										{
+											// guess the thumbnail
+											$image_url = 'https://archive.org/download/' . $value . '/page/cover_thumb.jpg';
+										}						
+									}
+								}
+							}
+							else
+							{
+								// Standard Internet Archive (guess)
+								$image_url = 'https://archive.org/download/' . $value . '/page/cover_thumb.jpg';
+							}
 						}
 						break;
 						
 					case 'P953': // fulltext 
-						foreach ($v as $c)
+						if ($image_url == '')
 						{
-							$link = new stdclass;
-							// $link->URL = $c->mainsnak->datavalue->value->value;
-					
-							if (isset($c->qualifiers))
+							foreach ($v as $c)
 							{
-								// PDF?
-								if (isset($c->qualifiers->{'P2701'}))
+								$link = new stdclass;
+								// $link->URL = $c->mainsnak->datavalue->value->value;
+					
+								if (isset($c->qualifiers))
 								{
-									if ($c->qualifiers->{'P2701'}[0]->datavalue->value->id == 'Q42332')
+									// PDF?
+									if (isset($c->qualifiers->{'P2701'}))
 									{
-										$link->{'content-type'} = 'application/pdf';
-									};
-								}
+										if ($c->qualifiers->{'P2701'}[0]->datavalue->value->id == 'Q42332')
+										{
+											$link->{'content-type'} = 'application/pdf';
+										};
+									}
 						
-								// Archived?
-								if (isset($c->qualifiers->{'P1065'}))
-								{
-									$link->URL = $c->qualifiers->{'P1065'}[0]->datavalue->value;
-									// direct link to PDF
-									$link->URL = str_replace("/http", "if_/http", $link->URL);
-								}						
-							}
-					
-							if (isset($link->URL) && (isset($link->{'content-type'}) && $link->{'content-type'} == 'application/pdf'))
-							{					
-								// There is an archived PDF
-								
-								// fetch PDF
-								$pdf_filename = $config['wayback'] . '/' . $qid . '.pdf';
-								
-								if (!file_exists($pdf_filename))
-								{
-									$command =  "wget --timeout=20 --tries=4 --no-check-certificate '" . $link->URL . "' -O $pdf_filename";
-									system($command);
+									// Archived?
+									if (isset($c->qualifiers->{'P1065'}))
+									{
+										$link->URL = $c->qualifiers->{'P1065'}[0]->datavalue->value;
+										// direct link to PDF
+										$link->URL = str_replace("/http", "if_/http", $link->URL);
+									}						
 								}
+					
+								if (isset($link->URL) && (isset($link->{'content-type'}) && $link->{'content-type'} == 'application/pdf'))
+								{					
+									// There is an archived PDF
 								
-								// get first page as image
-								$dir = get_image_dir($qid);
-								$command = "pdftopng -f 1 -l 1 -r 12 $pdf_filename  $dir/$qid";
-								echo $command . "\n";
-								system($command);
+									// fetch PDF
+									$pdf_filename = $config['wayback'] . '/' . $qid . '.pdf';
 								
-								// clean up
-								$img_filename = "$dir/$qid-000001.png";
-								rename ($img_filename, $filename);
+									if (!file_exists($pdf_filename))
+									{
+										$command =  "wget --timeout=20 --tries=4 --no-check-certificate '" . $link->URL . "' -O $pdf_filename";
+										system($command);
+									}
+								
+									// get first page as image
+									$dir = get_image_dir($qid);
+									$command = "pdftopng -f 1 -l 1 -r 12 $pdf_filename  $dir/$qid";
+									echo $command . "\n";
+									system($command);
+								
+									// clean up
+									$img_filename = "$dir/$qid-000001.png";
+									rename ($img_filename, $filename);
 								
 					
-							}
-						}		
+								}
+							}	
+						}	
 						break;
 	
 					default:
@@ -221,7 +259,7 @@ function fetch_image($qid, &$count, $force = false)
 			}
 		}	
 		
-		//echo "image url = $image_url\n";
+		echo "image url = $image_url\n";
 		
 		if ($image_url != '')
 		{
@@ -229,6 +267,26 @@ function fetch_image($qid, &$count, $force = false)
 			if ($image_content != '')
 			{
 				file_put_contents($filename, $image_content);
+				
+				// make small
+				$image_filename = $filename;
+		
+				$finfo = finfo_open(FILEINFO_MIME_TYPE); // return mime type ala mimetype extension
+				$mimetype  = finfo_file($finfo, $image_filename);
+				finfo_close($finfo);
+				
+				$new_filename = $image_filename  . str_replace('image/', '.', $mimetype);
+		
+				rename($image_filename, $new_filename);
+		
+				$command = 'convert ' . $new_filename . ' -resize 100x100 ' . $new_filename;
+		
+				echo $command . "\n";
+		
+				system($command);
+		
+				rename($new_filename, $image_filename);
+				
 			}
 		}
 		
