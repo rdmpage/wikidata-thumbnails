@@ -5,7 +5,7 @@ require_once('image.php');
 
 $qids=array();
 
-$qids=array("Q76333878");
+$qids=array("Q110815136");
 
 
 $count = 1;
