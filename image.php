@@ -109,9 +109,8 @@ function fetch_image($qid, &$count, $force = false)
 		{	
 			$obj = json_decode($json);
 			
-			//print_r($obj);
-			
-			
+			// print_r($obj);
+						
 			$image_url == '';
 			foreach ($obj->entities->{$qid}->claims as $k => $v)
 			{
