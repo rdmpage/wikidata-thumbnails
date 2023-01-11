@@ -232,9 +232,9 @@ function fetch_image($qid, &$count, $force = false)
 								
 									if (!file_exists($pdf_filename))
 									{
-										//$command =  "wget --timeout=20 --tries=4 --no-check-certificate '" . $link->URL . "' -O $pdf_filename";
+										$command =  "wget --timeout=20 --tries=4 --no-check-certificate '" . $link->URL . "' -O $pdf_filename";
 										
-										$command =  "curl -L '" . $link->URL . "' > $pdf_filename";
+										//$command =  "curl -L '" . $link->URL . "' > $pdf_filename";
 										
 										system($command);
 									}
