@@ -195,7 +195,7 @@ function fetch_image($qid, &$count, $force = false)
 						}
 						break;
 						
-						/*
+						
 					case 'P953': // fulltext 
 						if ($image_url == '')
 						{
@@ -255,7 +255,7 @@ function fetch_image($qid, &$count, $force = false)
 							}	
 						}	
 						break;
-						*/
+						
 	
 					default:
 						break;
