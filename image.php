@@ -246,7 +246,7 @@ function fetch_image($qid, &$count, $force = false)
 									if (0)
 									{
 										// xpdf
-										$command = "pdftopng -f 1 -l 1 -r 12 $pdf_filename  $dir/$qid";
+										$command = "pdftopng -f 1 -l 1 -r 12 $pdf_filename $dir/$qid";
 										echo $command . "\n";
 										system($command);
 										
@@ -262,6 +262,11 @@ function fetch_image($qid, &$count, $force = false)
 
 										echo $command . "\n";
 										system($command);
+										
+										// clean up
+										$img_filename = "$dir/$qid.png";
+										rename ($img_filename, $filename);
+										
 									}
 								
 					
