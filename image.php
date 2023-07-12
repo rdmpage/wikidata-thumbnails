@@ -242,13 +242,27 @@ function fetch_image($qid, &$count, $force = false)
 								
 									// get first page as image
 									$dir = get_image_dir($qid);
-									$command = "pdftopng -f 1 -l 1 -r 12 $pdf_filename  $dir/$qid";
-									echo $command . "\n";
-									system($command);
-								
-									// clean up
-									$img_filename = "$dir/$qid-000001.png";
-									rename ($img_filename, $filename);
+									
+									if (0)
+									{
+										// xpdf
+										$command = "pdftopng -f 1 -l 1 -r 12 $pdf_filename  $dir/$qid";
+										echo $command . "\n";
+										system($command);
+										
+										// clean up
+										$img_filename = "$dir/$qid-000001.png";
+										rename ($img_filename, $filename);
+									}
+									
+									if (1)
+									{
+										// popplr
+										$command = "pdftoppm -singlefile -f 1 -r 72 -png $pdf_filename > $dir/$qid.png";
+
+										echo $command . "\n";
+										system($command);
+									}
 								
 					
 								}
