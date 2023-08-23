@@ -164,6 +164,11 @@ function fetch_image($qid, &$count, $force = false)
 						{
 							$mainsnak = $v[0]->mainsnak;					
 							$value = $mainsnak->datavalue->value;
+							
+							if (preg_match('/\s/', $value))
+							{
+								break;
+							}
 
 							// We can't always rely on simple rules as some archives (e.g. PubMed Central)
 							// have their own rules for files
