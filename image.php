@@ -263,7 +263,7 @@ function fetch_image($qid, &$count, $force = false)
 									if (1)
 									{
 										// popplr
-										$command = "pdftoppm -singlefile -f 1 -r 72 -png $pdf_filename > $dir/$qid.png";
+										$command = "pdftoppm -singlefile -f 1 -scale-to 100 -png $pdf_filename > $dir/$qid.png";
 
 										echo $command . "\n";
 										system($command);
