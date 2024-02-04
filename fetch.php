@@ -7,6 +7,7 @@ $qids=array();
 
 
 $qids=array(
+/*
 'Q124410121',
 'Q124410122',
 'Q124410123',
@@ -131,7 +132,7 @@ $qids=array(
 'Q124410537',
 'Q124410539',
 'Q124410542',
-'Q124410544',
+'Q124410544',*/
 'Q124410545',
 'Q124410724',
 'Q124410726',
@@ -968,9 +969,9 @@ foreach ($qids as $qid)
 	$image = fetch_image($qid, $count, $force);	
 	
 	// Give server a break every 10 items
-	if (($count % 10) == 0)
+	if (($count % 2) == 0)
 	{
-		$rand = rand(1000000, 3000000);
+		$rand = rand(3000000, 10000000);
 		echo "\n...sleeping for " . round(($rand / 1000000),2) . ' seconds' . "\n\n";
 		usleep($rand);
 	}
