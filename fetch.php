@@ -1619,7 +1619,7 @@ $qids=array(
 $count = 1;
 
 $force = false;
-$force = true;
+//$force = true;
 
 foreach ($qids as $qid)
 {
